@@ -55,6 +55,18 @@ v_nodes_first_hidden = np.logspace(0, 7, num=8, base=2)
 v_nodes_second_hidden = np.logspace(0, 7, num=8, base=2)
 v_dropout_rate = np.linspace(0,1,11)
 
+v_list = [v_epoch_num,v_btch_size,v_nodes_first_hidden,v_nodes_second_hidden,v_dropout_rate]
+
+# for i, v in enumerate(v_list):
+#     epoch_num           = v[i] if i == 0 else 1
+#     btch_size           = v[i] if i == 1 else 4800
+#     nodes_first_hidden  = v[i] if i == 2 else 1
+#     nodes_second_hidden = v[i] if i == 3 else 1
+#     dropout_rate        = v[i] if i == 4 else 0.5 
+
+
+
+
 for train_index, test_index in skf.split(X_tfidf, y_encoded):
     X_train, X_test = X_tfidf[train_index], X_tfidf[test_index]
     y_train, y_test = y_encoded[train_index], y_encoded[test_index]
@@ -87,9 +99,10 @@ for train_index, test_index in skf.split(X_tfidf, y_encoded):
     
     # Confusion matrix
     conf_matrix = confusion_matrix(y_test, y_pred)
-    conf_matrix/=conf_matrix.astype(np.float).sum(axis=1)
+    # Normalize the confusion matrix row-wise
+    conf_matrix = conf_matrix.astype(np.float64) / conf_matrix.sum(axis=1, keepdims=True)
     plt.figure(figsize=(6, 6))
-    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
+    sns.heatmap(conf_matrix, annot=True, fmt='.2f', cmap='Blues', xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
     plt.title(f'Confusion Matrix - Fold {fold}')
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
@@ -121,3 +134,5 @@ for train_index, test_index in skf.split(X_tfidf, y_encoded):
 print(f'Average Accuracy: {np.mean(accuracy_list):.2f}')
 print(f'Average Recall: {np.mean(recall_list):.2f}')
 print(f'Average Precision: {np.mean(precision_list):.2f}')
+
+
