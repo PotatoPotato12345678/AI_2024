@@ -1,0 +1,76 @@
+the number of paper available
+
+--arXiv--
+astro-ph               : 105380 => retrieve 2000
+
+--PubMed--
+psychology             : 294    => retrieve  294
+    emotions           : 1799   => retrieve 1706
+    behavioral sciences: 1398
+sociology              : 5322   => retrieve 2000
+
+
+---Preprocessing---
+1.Removing URLs
+2.Converting all Verbs to presense and singular words to the plural forms by nltk and textblob
+3.Removing special characters: º and ˜
+4.Lowercasing
+5.Replacing words with Latex expression with a special word: º
+6.Replacing words with number expression with ˜
+7.Removing words with special characters: ! " # $ % & ' ( ) * + ,. / : ; < = > ? @ [ \ ] ^ _ ` { | } ~
+8.Replacing "-" with a single space.
+9.Removing stopwards by nltk:
+
+# remove verb
+
+--Complementary explanation--
+step 2
+This is not to categorize words differently only by tense, -s.
+
+step 3
+This removes º˜ in advance not to mix them with transformed words by step4 and step5.
+
+Step 5 and 6
+it may be intuitive that some fields often use mathmatical formulas and numbers in text such as physics and astronomy fields.
+TF-IDF classiy each mathematical expression as completely different information without processing. Therefore, in order to group them, every latex expression (e.g $R\sim25.5$) is denoted "&%&", and every number expression is denoted as "&#&".
+
+Step 6
+the reason for number replacement before the later steps is to incluce number expression information before removing by them. 
+
+Step 8
+This is not to separate word meanings only by "-" such as "gamma-ray", and "gamma" and "ray".
+
+
+--methodology--
+10-fold cross-validation
+train: 1400
+test :  600
+
+--model--
+TF-IDF and Feedfoward neural network
+
+TF-IDF
+-pros
+This characterizes what particular words appear in each topic.
+
+
+-cons
+It doesn't consider context and word positions.
+=> e.g) the word "it" is considered the same meaning all the time.
+=> Topic classficaiton can be done without considering semantics.
+=> e.g) We can easily assume that psychlogy fields use the word "planet" less than astronomy field.
+
+easily affected by input text length because of frequency property.
+=> abstract is around 200 words and considered less affected than other texts such as body texts.
+
+Feedfoward neural network
+-pros
+
+
+-cons
+
+
+--Evaluation--
+Recall
+Precise
+Accuracy
