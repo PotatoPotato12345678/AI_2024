@@ -32,32 +32,34 @@ y_encoded = label_encoder.fit_transform(labels)
 skf = StratifiedKFold(n_splits=5)
 fold = 1
 
-#initial situation
-ini_epoch_num = 5
-ini_btch_size = 16
-ini_nodes_first_hidden = 16
+test_phase = "exp_2"
+
+ini_epoch_num = 14
+ini_btch_size = 32
+ini_nodes_first_hidden = 256
 ini_nodes_second_hidden = 16
 ini_dropout_rate = 0.5
 
-# test situation
-v_epoch_num = np.arange(1,(30+1))
-v_btch_size = np.logspace(0, 10, num=11, base=2)
-v_nodes_first_hidden = np.logspace(0, 10, num=11, base=2)
-v_nodes_second_hidden = np.logspace(0, 10, num=11, base=2)
-v_dropout_rate = np.linspace(0,1,10,endpoint=False)
+v_nodes_second_hidden = np.logspace(0, 12, num=13, base=2)
 
-v_list = [v_epoch_num,v_btch_size,v_nodes_first_hidden,v_nodes_second_hidden,v_dropout_rate]
-variable_names = ["Epochs", "Batch Size", "First Hidden Layer Nodes", "Second Hidden Layer Nodes", "Dropout Rate"]
-
-accuracies_per_variable = []
+v_list = [v_nodes_second_hidden]
+variable_names = ["Second Hidden Layer Nodes"]
 
 for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
+  accuracies_per_variable = []
+
   for j, v in enumerate(v_type):
-    epoch_num           = v if i == 0 else ini_epoch_num
-    btch_size           = int(v) if i == 1 else ini_btch_size
-    nodes_first_hidden  = int(v) if i == 2 else ini_nodes_first_hidden
-    nodes_second_hidden = int(v) if i == 3 else ini_nodes_second_hidden
-    dropout_rate        = v if i == 4 else ini_dropout_rate
+    # epoch_num           = v if i == 0 else ini_epoch_num
+    # btch_size           = int(v) if i == 1 else ini_btch_size
+    # nodes_first_hidden  = int(v) if i == 2 else ini_nodes_first_hidden
+    # nodes_second_hidden = int(v) if i == 3 else ini_nodes_second_hidden
+    # dropout_rate        = v if i == 4 else ini_dropout_rate
+
+    epoch_num           = ini_epoch_num
+    btch_size           = ini_btch_size
+    nodes_first_hidden  = ini_nodes_first_hidden
+    nodes_second_hidden = int(v) if i == 0 else ini_nodes_second_hidden
+    dropout_rate        = ini_dropout_rate
 
     print("---------------------------------------------")
     print(f"i: {i}, j: {j}")
@@ -77,7 +79,7 @@ for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
     all_f1 = []
     all_conf_matrices = []
 
-    with open(f"./result/exp_1/info/i:{i}_j:{j}", "wb") as f:
+    with open(f"./result/{test_phase}/info/i:{i}_j:{j}", "wb") as f:
       info = {"ep":epoch_num, "bchs":btch_size,"nF":nodes_first_hidden, "nS":nodes_second_hidden, "drpRt": dropout_rate}
       pickle.dump(info,f)
 
@@ -151,7 +153,7 @@ for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
     plt.title("Mean Confusion Matrix Across Folds")
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
-    plt.savefig(f"./result/exp_1/img/Confusion_matrix/{i}_{j}.png")
+    plt.savefig(f"./result/{test_phase}/img/Confusion_matrix/{i}_{j}.png")
     plt.close()
 
     # Plot mean ROC curve
@@ -164,7 +166,7 @@ for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend()
-    plt.savefig(f"./result/exp_1/img/ROC/{i}_{j}.png")
+    plt.savefig(f"./result/{test_phase}/img/ROC/{i}_{j}.png")
     plt.close()
 
     # Averaged evaluation
@@ -178,10 +180,10 @@ for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
     accuracies_per_variable.append(np.mean(all_accuracy))
 
     # Save the averaged evaluation metrics
-    with open(f"./result/exp_1/ave_evaluation/i:{i}_j:{j}_.pickle", "wb") as f:
+    with open(f"./result/{test_phase}/ave_evaluation/i:{i}_j:{j}_.pickle", "wb") as f:
         pickle.dump(averaged_evaluation, f)
   
-  with open(f"./result/exp_1/learning_curve/data/{var_name}_.pickle", "wb") as f:
+  with open(f"./result/{test_phase}/learning_curve/data/{var_name}_.pickle", "wb") as f:
       pickle.dump(accuracies_per_variable, f)
   
   # Append results
@@ -192,5 +194,5 @@ for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
   plt.ylabel("Accuracy")
   plt.grid(True)
   plt.legend()
-  plt.savefig(f"./result/exp_1/learning_curve/{var_name}_learning_curve.png")
+  plt.savefig(f"./result/{test_phase}/learning_curve/{var_name}_learning_curve.png")
   plt.close()
