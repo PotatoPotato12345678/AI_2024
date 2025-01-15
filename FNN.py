@@ -32,18 +32,18 @@ y_encoded = label_encoder.fit_transform(labels)
 skf = StratifiedKFold(n_splits=5)
 fold = 1
 
-test_phase = "exp_4"
+test_phase = "exp_5"
 
 ini_epoch_num = 14
 ini_btch_size = 64
 ini_nodes_first_hidden = 256
 ini_nodes_second_hidden = 128
-ini_dropout_rate = 0.5
+ini_dropout_rate = 0.2
 
-v_dropout_rate = np.linspace(0,1,10,endpoint=False)
+v_epoch_num = np.arange(1,(50+1))
 
-v_list = [v_dropout_rate]
-variable_names = ["Dropout Rate"]
+v_list = [v_epoch_num]
+variable_names = ["Epochs"]
 
 for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
   accuracies_per_variable = []
@@ -55,11 +55,11 @@ for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
     # nodes_second_hidden = int(v) if i == 3 else ini_nodes_second_hidden
     # dropout_rate        = v if i == 4 else ini_dropout_rate
 
-    epoch_num           = ini_epoch_num
+    epoch_num           = v if i == 0 else ini_epoch_num
     btch_size           = ini_btch_size
     nodes_first_hidden  = ini_nodes_first_hidden
     nodes_second_hidden = ini_nodes_second_hidden
-    dropout_rate        = v if i == 0 else ini_dropout_rate
+    dropout_rate        = ini_dropout_rate
 
     print("---------------------------------------------")
     print(f"i: {i}, j: {j}")
