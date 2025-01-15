@@ -32,18 +32,18 @@ y_encoded = label_encoder.fit_transform(labels)
 skf = StratifiedKFold(n_splits=5)
 fold = 1
 
-test_phase = "exp_2"
+test_phase = "exp_3"
 
 ini_epoch_num = 14
 ini_btch_size = 32
 ini_nodes_first_hidden = 256
-ini_nodes_second_hidden = 16
+ini_nodes_second_hidden = 128
 ini_dropout_rate = 0.5
 
-v_nodes_second_hidden = np.logspace(0, 12, num=13, base=2)
+v_btch_size = np.logspace(0, 12, num=13, base=2)
 
-v_list = [v_nodes_second_hidden]
-variable_names = ["Second Hidden Layer Nodes"]
+v_list = [v_btch_size]
+variable_names = ["Batch Size"]
 
 for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
   accuracies_per_variable = []
