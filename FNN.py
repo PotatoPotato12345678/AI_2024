@@ -40,16 +40,19 @@ ini_nodes_second_hidden = 16
 ini_dropout_rate = 0.5
 
 # test situation
-v_epoch_num = np.arange(1,31)
-v_btch_size = np.logspace(0, 8, num=9, base=2)
-v_nodes_first_hidden = np.logspace(0, 8, num=9, base=2)
-v_nodes_second_hidden = np.logspace(0, 8, num=9, base=2)
+v_epoch_num = np.arange(1,(30+1))
+v_btch_size = np.logspace(0, 10, num=11, base=2)
+v_nodes_first_hidden = np.logspace(0, 10, num=11, base=2)
+v_nodes_second_hidden = np.logspace(0, 10, num=11, base=2)
 v_dropout_rate = np.linspace(0,1,10,endpoint=False)
 
 v_list = [v_epoch_num,v_btch_size,v_nodes_first_hidden,v_nodes_second_hidden,v_dropout_rate]
+variable_names = ["Epochs", "Batch Size", "First Hidden Layer Nodes", "Second Hidden Layer Nodes", "Dropout Rate"]
 
-for i, v_type in enumerate(v_list):
-  for j, v in enumerate(v_type):    
+accuracies_per_variable = []
+
+for i, (v_type, var_name) in enumerate(zip(v_list,variable_names)):
+  for j, v in enumerate(v_type):
     epoch_num           = v if i == 0 else ini_epoch_num
     btch_size           = int(v) if i == 1 else ini_btch_size
     nodes_first_hidden  = int(v) if i == 2 else ini_nodes_first_hidden
@@ -74,7 +77,7 @@ for i, v_type in enumerate(v_list):
     all_f1 = []
     all_conf_matrices = []
 
-    with open(f"./result/info/i:{i}_j:{j}", "wb") as f:
+    with open(f"./result/exp_1/info/i:{i}_j:{j}", "wb") as f:
       info = {"ep":epoch_num, "bchs":btch_size,"nF":nodes_first_hidden, "nS":nodes_second_hidden, "drpRt": dropout_rate}
       pickle.dump(info,f)
 
@@ -148,7 +151,7 @@ for i, v_type in enumerate(v_list):
     plt.title("Mean Confusion Matrix Across Folds")
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
-    plt.savefig(f"./result/img/Confusion_matrix/{i}_{j}.png")
+    plt.savefig(f"./result/exp_1/img/Confusion_matrix/{i}_{j}.png")
     plt.close()
 
     # Plot mean ROC curve
@@ -161,7 +164,7 @@ for i, v_type in enumerate(v_list):
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend()
-    plt.savefig(f"./result/img/ROC/{i}_{j}.png")
+    plt.savefig(f"./result/exp_1/img/ROC/{i}_{j}.png")
     plt.close()
 
     # Averaged evaluation
@@ -172,6 +175,22 @@ for i, v_type in enumerate(v_list):
         "F1-Score": np.mean(all_f1)
     }
 
+    accuracies_per_variable.append(np.mean(all_accuracy))
+
     # Save the averaged evaluation metrics
-    with open(f"./result/ave_evaluation/i:{i}_j:{j}_.pickle", "wb") as f:
+    with open(f"./result/exp_1/ave_evaluation/i:{i}_j:{j}_.pickle", "wb") as f:
         pickle.dump(averaged_evaluation, f)
+  
+  with open(f"./result/exp_1/learning_curve/data/{var_name}_.pickle", "wb") as f:
+      pickle.dump(accuracies_per_variable, f)
+  
+  # Append results
+  plt.figure(figsize=(8, 6))
+  plt.plot(v_type, accuracies_per_variable, label=f"Accuracy vs {var_name}", marker='o')
+  plt.title(f"Learning Curve: {var_name}")
+  plt.xlabel(var_name)
+  plt.ylabel("Accuracy")
+  plt.grid(True)
+  plt.legend()
+  plt.savefig(f"./result/exp_1/learning_curve/{var_name}_learning_curve.png")
+  plt.close()
