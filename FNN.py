@@ -5,10 +5,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.optimizers import SGD
+import pandas as pd
 
 import pickle
 
@@ -31,108 +32,146 @@ y_encoded = label_encoder.fit_transform(labels)
 skf = StratifiedKFold(n_splits=5)
 fold = 1
 
-accuracy_list = []
-recall_list = []
-precision_list = []
-
 #initial situation
-# epoch_num = 5
-# btch_size = 128
-# nodes_first_hidden = 16
-# nodes_second_hidden = 8
-# dropout_rate = 0.5
-
-epoch_num = 1
-btch_size = 4800
-nodes_first_hidden = 1
-nodes_second_hidden = 1
-dropout_rate = 0.5
+ini_epoch_num = 5
+ini_btch_size = 16
+ini_nodes_first_hidden = 16
+ini_nodes_second_hidden = 16
+ini_dropout_rate = 0.5
 
 # test situation
-v_epoch_num = np.arange(1,20)
-v_btch_size = np.logspace(0, 7, num=8, base=2)
-v_nodes_first_hidden = np.logspace(0, 7, num=8, base=2)
-v_nodes_second_hidden = np.logspace(0, 7, num=8, base=2)
-v_dropout_rate = np.linspace(0,1,11)
+v_epoch_num = np.arange(1,31)
+v_btch_size = np.logspace(0, 8, num=9, base=2)
+v_nodes_first_hidden = np.logspace(0, 8, num=9, base=2)
+v_nodes_second_hidden = np.logspace(0, 8, num=9, base=2)
+v_dropout_rate = np.linspace(0,1,10,endpoint=False)
 
 v_list = [v_epoch_num,v_btch_size,v_nodes_first_hidden,v_nodes_second_hidden,v_dropout_rate]
 
-# for i, v in enumerate(v_list):
-#     epoch_num           = v[i] if i == 0 else 1
-#     btch_size           = v[i] if i == 1 else 4800
-#     nodes_first_hidden  = v[i] if i == 2 else 1
-#     nodes_second_hidden = v[i] if i == 3 else 1
-#     dropout_rate        = v[i] if i == 4 else 0.5 
+for i, v_type in enumerate(v_list):
+  for j, v in enumerate(v_type):    
+    epoch_num           = v if i == 0 else ini_epoch_num
+    btch_size           = int(v) if i == 1 else ini_btch_size
+    nodes_first_hidden  = int(v) if i == 2 else ini_nodes_first_hidden
+    nodes_second_hidden = int(v) if i == 3 else ini_nodes_second_hidden
+    dropout_rate        = v if i == 4 else ini_dropout_rate
 
+    print("---------------------------------------------")
+    print(f"i: {i}, j: {j}")
+    print(f"epoch_num          : {epoch_num}")
+    print(f"btch_size          : {btch_size}")
+    print(f"nodes_first_hidden : {nodes_first_hidden}")
+    print(f"nodes_second_hidden: {nodes_second_hidden}")
+    print(f"dropout_rate       : {dropout_rate}")
+    print("---------------------------------------------")
 
+    all_fpr = []
+    all_tpr = []
+    roc_aucs = []
+    all_accuracy = []
+    all_precision = []
+    all_recall = []
+    all_f1 = []
+    all_conf_matrices = []
 
+    with open(f"./result/info/i:{i}_j:{j}", "wb") as f:
+      info = {"ep":epoch_num, "bchs":btch_size,"nF":nodes_first_hidden, "nS":nodes_second_hidden, "drpRt": dropout_rate}
+      pickle.dump(info,f)
 
-for train_index, test_index in skf.split(X_tfidf, y_encoded):
-    X_train, X_test = X_tfidf[train_index], X_tfidf[test_index]
-    y_train, y_test = y_encoded[train_index], y_encoded[test_index]
-    
-    # Build the model
-    model = Sequential([
-        Dense(X_tfidf.shape[1], input_dim=X_tfidf.shape[1], activation='relu'),
-        Dropout(dropout_rate),
-        Dense(nodes_first_hidden, activation='relu'),
-        Dropout(dropout_rate),
-        Dense(nodes_second_hidden, activation='relu'),
-        Dropout(dropout_rate),
-        Dense(len(label_encoder.classes_), activation='softmax')
-    ])
+    accuracy_list = []
+    recall_list = []
+    precision_list = []
+    f1_list = []
 
-    sgd = SGD(learning_rate=0.01)
-    
-    model.compile(optimizer=sgd, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    history = model.fit(X_train, y_train, epochs=epoch_num, batch_size=btch_size, verbose=0)  # Adjust epochs as needed
-    
-    # Evaluate the model
-    y_pred_proba = model.predict(X_test)
-    y_pred = np.argmax(y_pred_proba, axis=1)
-    
-    # Metrics
-    accuracy_list.append(np.mean(y_pred == y_test))
-    report = classification_report(y_test, y_pred, target_names=label_encoder.classes_, output_dict=True)
-    recall_list.append(report['weighted avg']['recall'])
-    precision_list.append(report['weighted avg']['precision'])
-    
-    # Confusion matrix
-    conf_matrix = confusion_matrix(y_test, y_pred)
-    # Normalize the confusion matrix row-wise
-    conf_matrix = conf_matrix.astype(np.float64) / conf_matrix.sum(axis=1, keepdims=True)
-    plt.figure(figsize=(6, 6))
-    sns.heatmap(conf_matrix, annot=True, fmt='.2f', cmap='Blues', xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
-    plt.title(f'Confusion Matrix - Fold {fold}')
-    plt.xlabel('Predicted Label')
-    plt.ylabel('True Label')
-    plt.savefig(f"./result/img/{fold}_confusion_matrix.png")
-    
-    # ROC Curve
-    fpr, tpr, _ = roc_curve(to_categorical(y_test, num_classes=len(label_encoder.classes_)).ravel(), y_pred_proba.ravel())
-    roc_auc = auc(fpr, tpr)
-    plt.figure()
-    plt.plot(fpr, tpr, label=f'Fold {fold} (AUC = {roc_auc:.2f})')
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.title('ROC Curve')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.legend(loc='lower right')
-    plt.savefig(f"./result/img/{fold}_ROC.png")
-    
-    # Learning curve
-    plt.figure()
-    plt.plot(history.history['accuracy'], label='Train Accuracy')
-    plt.title('Learning Curve')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
+    for train_index, test_index in skf.split(X_tfidf, y_encoded):
+      X_train, X_test = X_tfidf[train_index], X_tfidf[test_index]
+      y_train, y_test = y_encoded[train_index], y_encoded[test_index]
+
+      # Build the model
+      model = Sequential([
+          Input(shape=(X_tfidf.shape[1],)),
+          Dropout(dropout_rate),
+          Dense(nodes_first_hidden, activation='relu'),
+          Dropout(dropout_rate),
+          Dense(nodes_second_hidden, activation='relu'),
+          Dropout(dropout_rate),
+          Dense(len(label_encoder.classes_), activation='softmax')
+      ])
+
+      sgd = SGD(learning_rate=0.01)
+      model.compile(optimizer=sgd, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+      history = model.fit(X_train, y_train, epochs=epoch_num, batch_size=btch_size, verbose=0)
+
+      # Evaluate the model
+      y_pred_proba = model.predict(X_test)
+      y_pred = np.argmax(y_pred_proba, axis=1)
+
+      # Metrics
+      accuracy = np.mean(y_pred == y_test)
+      all_accuracy.append(accuracy)
+
+      report = classification_report(y_test, y_pred, target_names=label_encoder.classes_, output_dict=True)
+      recall = report['weighted avg']['recall']
+      precision = report['weighted avg']['precision']
+      f1 = 2 * (precision * recall) / (precision + recall)
+
+      all_recall.append(recall)
+      all_precision.append(precision)
+      all_f1.append(f1)
+
+      # ROC Curve
+      fpr, tpr, _ = roc_curve(to_categorical(y_test, num_classes=len(label_encoder.classes_)).ravel(), y_pred_proba.ravel())
+      roc_auc = auc(fpr, tpr)
+      all_fpr.append(fpr)
+      all_tpr.append(tpr)
+      roc_aucs.append(roc_auc)
+
+      # Confusion Matrix
+      conf_matrix = confusion_matrix(y_test, y_pred)
+      conf_matrix = conf_matrix.astype(np.float64) / conf_matrix.sum(axis=1, keepdims=True)  # Normalize row-wise
+      all_conf_matrices.append(conf_matrix)
+
+    # Average confusion matrix
+    mean_conf_matrix = np.mean(all_conf_matrices, axis=0)
+
+    # Calculate mean ROC curve
+    mean_fpr = np.linspace(0, 1, 100)
+    mean_tpr = np.mean([np.interp(mean_fpr, fpr, tpr) for fpr, tpr in zip(all_fpr, all_tpr)], axis=0)
+    mean_tpr[-1] = 1.0
+    mean_auc = auc(mean_fpr, mean_tpr)
+
+    # Plot mean confusion matrix
+    plt.figure(figsize=(8, 8))
+    sns.heatmap(mean_conf_matrix, annot=True, fmt='.2f', cmap='Blues',
+                xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
+    plt.title("Mean Confusion Matrix Across Folds")
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+    plt.savefig(f"./result/img/Confusion_matrix/{i}_{j}.png")
+    plt.close()
+
+    # Plot mean ROC curve
+    plt.figure(figsize=(8, 8))
+    for i_r, roc_auc_value in enumerate(roc_aucs):
+        plt.plot(all_fpr[i_r], all_tpr[i_r], alpha=0.3, label=f"Fold {i_r+1} ROC (AUC = {roc_auc_value:.2f})")
+    plt.plot(mean_fpr, mean_tpr, color='b', label=f"Mean ROC (AUC = {mean_auc:.2f})", lw=2)
+    plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
+    plt.title("Mean ROC Curve Across Folds")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
     plt.legend()
-    plt.savefig(f"./result/img/{fold}Learning_Curve.png")
-    fold += 1
+    plt.savefig(f"./result/img/ROC/{i}_{j}.png")
+    plt.close()
 
-# Final metrics
-print(f'Average Accuracy: {np.mean(accuracy_list):.2f}')
-print(f'Average Recall: {np.mean(recall_list):.2f}')
-print(f'Average Precision: {np.mean(precision_list):.2f}')
+    # Averaged evaluation
+    averaged_evaluation = {
+        "Accuracy": np.mean(all_accuracy),
+        "Precision": np.mean(all_precision),
+        "Recall": np.mean(all_recall),
+        "F1-Score": np.mean(all_f1)
+    }
 
-
+    # Save the averaged evaluation metrics
+    with open(f"./result/ave_evaluation/i:{i}_j:{j}_.pickle", "wb") as f:
+        pickle.dump(averaged_evaluation, f)
