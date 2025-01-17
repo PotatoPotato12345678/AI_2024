@@ -10,7 +10,6 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.optimizers import SGD
 import pandas as pd
-
 import pickle
 
 with open('label/data.pickle', mode='rb') as f:
@@ -32,10 +31,15 @@ y_encoded = label_encoder.fit_transform(labels)
 skf = StratifiedKFold(n_splits=5)
 fold = 1
 
-epoch_num = 14
-btch_size = 64
-nodes_first_hidden = 256
-nodes_second_hidden = 128
+# epoch_num = 23
+# btch_size = 64
+# nodes_first_hidden = 256
+# nodes_second_hidden = 128
+# dropout_rate = 0.2
+epoch_num = 1
+btch_size = 2000
+nodes_first_hidden = 1
+nodes_second_hidden = 1
 dropout_rate = 0.2
 
 print("---------------------------------------------")
@@ -83,7 +87,7 @@ for train_index, test_index in skf.split(X_tfidf, y_encoded):
     accuracy = np.mean(y_pred == y_test)
     all_accuracy.append(accuracy)
 
-    report = classification_report(y_test, y_pred, target_names=label_encoder.classes_, output_dict=True)
+    report = classification_report(y_test, y_pred, target_names=label_encoder.classes_, output_dict=True, zero_division=0)
     recall = report['weighted avg']['recall']
     precision = report['weighted avg']['precision']
     f1 = 2 * (precision * recall) / (precision + recall)
@@ -145,10 +149,10 @@ for train_index, test_index in skf.split(X_tfidf, y_encoded):
     }
 
     print("-----------------------------------")
-    print("Accuracy:\t{0}".format(np.mean(all_accuracy)))
+    print("Accuracy :\t{0}".format(np.mean(all_accuracy)))
     print("Precision:\t{0}".format(np.mean(all_precision)))
-    print("Recall\t{0}".format(np.mean(all_recall)))
-    print("F1-Score\t{0}".format(np.mean(all_f1)))
+    print("Recall   :\t{0}".format(np.mean(all_recall)))
+    print("F1-Score :\t{0}".format(np.mean(all_f1)))
     print("-----------------------------------")
 
     # Save the averaged evaluation metrics
