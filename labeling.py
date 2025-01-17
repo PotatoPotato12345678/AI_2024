@@ -1,35 +1,34 @@
-import collections
-import pathlib
-import random
-import numpy as np
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 import pickle
 
+#read the processed data that the pre-processing is performed in pre-processing.py
 ast = open('./processed/astronomy.txt', 'r').read().split("\n\n")
 psy_1 = open('./processed/psychology.txt', 'r').read().split("\n\n")
 psy_2 = open('./processed/psychology_emotions.txt', 'r').read().split("\n\n")
 scio_1 = open('./processed/sociology.txt', 'r').read().split("\n\n")
 scio_2 = open('./processed/sociology_added.txt', 'r').read().split("\n\n")
 
-each_data_num = 2000
+each_data_num = 2000 # use 2000 data for each category
 corpus = [ast[:each_data_num], (psy_1+psy_2)[:each_data_num], (scio_1 + scio_2)[:each_data_num]]
 
-idx = 0
-data_label = {}
-for field_idx in range(len(corpus)):
-    for abstract in corpus[field_idx]:
+idx = 0 # label integer
+data_label = {} # put each abstract together with the integer (label)
+
+for field_idx in range(len(corpus)): # take the index of the corpus
+    for abstract in corpus[field_idx]: # take each abstract
         data_label[idx] = {
             "label": field_idx,
             "abstract": abstract
-            }   
+            }
         
         idx+=1
 
-with open('label/data.pickle', mode='wb') as fo:
-  pickle.dump(data_label,fo)
-
+# labeling table
 # astronomy: 0
 # psychology: 1
-#sosiology: 2
+# sosiology: 2
+
+# save the dataset
+with open('label/data.pickle', mode='wb') as fo:
+  pickle.dump(data_label,fo)
