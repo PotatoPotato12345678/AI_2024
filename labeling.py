@@ -27,5 +27,9 @@ for field_idx in range(len(corpus)):
         
         idx+=1
 
-with open('pickle/data.pickle', mode='wb') as fo:
+with open('label/data.pickle', mode='wb') as fo:
   pickle.dump(data_label,fo)
+
+# astronomy: 0
+# psychology: 1
+#sosiology: 2

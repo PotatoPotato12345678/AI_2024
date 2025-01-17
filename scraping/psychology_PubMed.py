@@ -68,11 +68,8 @@ def get_psychology_abstracts():
 # Run and save results
 psychology_abstracts = get_psychology_abstracts()
 with open(OUTPUT_FILE, "w", encoding="utf-8") as original_file:
-    with open(OUTPUT_PARSED_FILE, "w", encoding="utf-8") as parsed_file:
-        for abstract in psychology_abstracts:
-            original_file.write(abstract + "\n\n")
-            parsed_abs = LatexNodes2Text().latex_to_text(abstract)
-            parsed_file.write(parsed_abs + "\n\n")
+    for abstract in psychology_abstracts:
+        original_file.write(abstract + "\n\n")
 
 
 print(f"Total Psychology abstracts saved: {len(psychology_abstracts)}")

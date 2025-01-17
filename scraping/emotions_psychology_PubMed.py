@@ -7,7 +7,6 @@ from pylatexenc.latex2text import LatexNodes2Text
 PUBMED_SEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_FETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 OUTPUT_FILE = "./original/emotions.txt"
-OUTPUT_PARSED_FILE = "./latex_parsed/emotions.txt"
 API_KEY = "d2cc067dd37c4df5ad6992c386fb22691808"  # Replace with your PubMed API Key
 
 # Function to search PubMed for PMIDs
@@ -68,11 +67,9 @@ def get_psychology_abstracts():
 # Run and save results
 psychology_abstracts = get_psychology_abstracts()
 with open(OUTPUT_FILE, "w", encoding="utf-8") as original_file:
-    with open(OUTPUT_PARSED_FILE, "w", encoding="utf-8") as parsed_file:
-        for abstract in psychology_abstracts:
-            original_file.write(abstract + "\n\n")
-            parsed_abs = LatexNodes2Text().latex_to_text(abstract)
-            parsed_file.write(parsed_abs + "\n\n")
+    for abstract in psychology_abstracts:
+        original_file.write(abstract + "\n\n")
+
 
 
 print(f"Total emotions abstracts saved: {len(psychology_abstracts)}")

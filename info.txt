@@ -9,7 +9,6 @@ psychology             : 294    => retrieve  294
     behavioral sciences: 1398
 sociology              : 5322   => retrieve 2000
 
-
 ---Preprocessing---
 1.Removing URLs
 2.Converting all Verbs to presense and singular words to the plural forms by nltk and textblob
@@ -42,9 +41,7 @@ This is not to separate word meanings only by "-" such as "gamma-ray", and "gamm
 
 
 --methodology--
-10-fold cross-validation
-train: 1400
-test :  600
+5-fold cross-validation
 
 --model--
 TF-IDF and Feedfoward neural network
@@ -66,9 +63,7 @@ easily affected by input text length because of frequency property.
 Feedfoward neural network
 -pros
 
-
 -cons
-
 
 --Evaluation--
 Recall

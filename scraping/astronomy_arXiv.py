@@ -7,7 +7,6 @@ from pylatexenc.latex2text import LatexNodes2Text
 # Constants
 ARXIV_API_URL = "http://export.arxiv.org/api/query"
 OUTPUT_FILE = "./original/astronomy.txt"
-OUTPUT_PARSED_FILE = "./latex_parsed/astronomy.txt"
 
 # Function to fetch abstracts from arXiv
 def fetch_arxiv_abstracts(category="astro-ph", start=0, max_results=200):
@@ -47,13 +46,8 @@ def get_astronomy_abstracts():
 # Run and save results
 astronomy_abstracts = get_astronomy_abstracts()
 with open(OUTPUT_FILE, "w", encoding="utf-8") as original_file:
-    with open(OUTPUT_PARSED_FILE, "w", encoding="utf-8") as parsed_file:
-        for abstract in astronomy_abstracts:
-            
-            original_file.write(abstract + "\n\n")
-
-            parsed_abs = LatexNodes2Text().latex_to_text(abstract)
-            parsed_file.write(parsed_abs + "\n\n")
-    
+    for abstract in astronomy_abstracts:
+        original_file.write(abstract + "\n\n")
+        parsed_abs = LatexNodes2Text().latex_to_text(abstract)
 
 print(f"Total Astronomy abstracts saved: {len(astronomy_abstracts)}")
